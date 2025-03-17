@@ -45,8 +45,8 @@ export interface Task {
 
 // Input pour le résumé de livre
 export interface BookSummaryInput {
-  title: string;
-  author: string;
+  bookTitle: string;
+  bookAuthor: string;
 }
 
 // Type pour le résumé de livre

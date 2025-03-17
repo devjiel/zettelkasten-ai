@@ -31,28 +31,28 @@ const AgentsPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!bookTitle || !bookAuthor) {
       setError('Veuillez remplir tous les champs');
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
       setError(null);
       setSuccess(null);
-      
+
       const input: BookSummaryInput = {
-        title: bookTitle,
-        author: bookAuthor
+        bookTitle: bookTitle,
+        bookAuthor: bookAuthor
       };
-      
+
       const result = await agentService.createBookSummary(input);
-      
+
       setSuccess(`Tâche créée avec succès! ID de la tâche: ${result.taskId}`);
       setBookTitle('');
       setBookAuthor('');
-      
+
       // Rafraîchir la liste des tâches
       refreshTasks();
     } catch (err) {
@@ -69,18 +69,18 @@ const AgentsPage: React.FC = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           Agents IA
         </Typography>
-        
+
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h5" gutterBottom>
             Agent de résumé de livre
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          
+
           <Typography variant="body1" paragraph>
             Cet agent vous aide à créer des notes et des flashcards à partir d'un résumé de livre.
             Fournissez le titre, l'auteur et un résumé pour générer des fiches de notes.
           </Typography>
-          
+
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
             <TextField
               fullWidth
@@ -90,7 +90,7 @@ const AgentsPage: React.FC = () => {
               margin="normal"
               required
             />
-            
+
             <TextField
               fullWidth
               label="Auteur"
@@ -99,7 +99,7 @@ const AgentsPage: React.FC = () => {
               margin="normal"
               required
             />
-            
+
             <Button
               type="submit"
               variant="contained"
@@ -110,26 +110,26 @@ const AgentsPage: React.FC = () => {
               {isSubmitting ? 'Traitement en cours...' : 'Générer des notes'}
             </Button>
           </Box>
-          
+
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
             </Alert>
           )}
-          
+
           {success && (
             <Alert severity="success" sx={{ mt: 2 }}>
               {success}
             </Alert>
           )}
         </Paper>
-        
+
         <Paper sx={{ p: 3 }}>
           <Typography variant="h5" gutterBottom>
             Tâches en cours
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          
+
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
               <CircularProgress />
@@ -147,7 +147,7 @@ const AgentsPage: React.FC = () => {
               Aucune tâche en cours pour le moment.
             </Alert>
           )}
-          
+
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button onClick={refreshTasks} color="primary">
               Rafraîchir

@@ -47,9 +47,9 @@ const BookSummaryForm: React.FC<BookSummaryFormProps> = ({
   const handleSubmit = async () => {
     if (validateForm()) {
       try {
-        await onSubmit({ 
-          title: bookTitle, 
-          author: bookAuthor
+        await onSubmit({
+          bookTitle: bookTitle,
+          bookAuthor: bookAuthor
         });
         handleReset();
       } catch (error) {
