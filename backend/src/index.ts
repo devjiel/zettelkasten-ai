@@ -31,7 +31,15 @@ const PORT = process.env.PORT || 3000;
 let server: http.Server;
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001', // URL de votre frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // Cache préflight pour 24 heures
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -48,17 +56,17 @@ const taskRepo = TaskRepository.getInstance();
 // Fonction pour sauvegarder toutes les données avant la fermeture
 const saveAllData = () => {
   console.log('Sauvegarde des données avant fermeture...');
-  
+
   // Utiliser les getters pour accéder au stockage
   const noteStorage = noteRepo.getStorage();
   const flashcardStorage = flashcardRepo.getStorage();
   const taskStorage = taskRepo.getStorage();
-  
+
   // Sauvegarder les données
   noteStorage.saveToStorage();
   flashcardStorage.saveToStorage();
   taskStorage.saveToStorage();
-  
+
   console.log('Sauvegarde terminée');
 };
 

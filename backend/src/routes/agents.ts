@@ -18,4 +18,7 @@ router.get('/tasks', agentsController.getPendingTasks);
 // Route pour interroger la base de connaissances (RAG)
 router.post('/query', agentsController.queryKnowledgeBase);
 
+// Route pour extraire le contenu d'une page web
+router.post('/web-extract', agentsController.extractWebContent);
+
 export default router; 

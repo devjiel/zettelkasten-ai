@@ -9,13 +9,14 @@ import AgentsPage from './pages/AgentsPage';
 import SettingsPage from './pages/SettingsPage';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AppProvider } from './contexts/AppContext';
+import { AgentsProvider } from './contexts/AgentsContext';
 import { useContext } from 'react';
 import ThemeContext from './contexts/ThemeContext';
 
 // Wrapper component to use the theme context
 const AppWithTheme: React.FC = () => {
   const { darkMode } = useContext(ThemeContext);
-  
+
   // Create a theme instance based on dark mode preference
   const theme = useMemo(() => createTheme({
     palette: {
@@ -51,7 +52,9 @@ function App() {
   return (
     <ThemeProvider>
       <AppProvider>
-        <AppWithTheme />
+        <AgentsProvider>
+          <AppWithTheme />
+        </AgentsProvider>
       </AppProvider>
     </ThemeProvider>
   );

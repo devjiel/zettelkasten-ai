@@ -11,7 +11,7 @@ const taskRepository = TaskRepository.getInstance();
 export const getAvailableAgents = async (req: Request, res: Response): Promise<void> => {
   try {
     const agentTypes = agentOrchestrator.getAvailableAgentTypes();
-    
+
     const agents = agentTypes.map(type => {
       // Additional information for each agent type
       switch (type) {
@@ -29,6 +29,13 @@ export const getAvailableAgents = async (req: Request, res: Response): Promise<v
             description: 'Answers questions based on stored knowledge',
             parameters: ['query']
           };
+        case AgentType.WEB_EXTRACTOR:
+          return {
+            id: type,
+            name: 'Web Extractor Agent',
+            description: 'Extracts and processes content from web pages',
+            parameters: ['url']
+          };
         default:
           return {
             id: type,
@@ -38,7 +45,7 @@ export const getAvailableAgents = async (req: Request, res: Response): Promise<v
           };
       }
     });
-    
+
     res.json(agents);
   } catch (error) {
     console.error('Error retrieving available agents:', error);
@@ -52,17 +59,17 @@ export const getAvailableAgents = async (req: Request, res: Response): Promise<v
 export const runBookSummaryAgent = async (req: Request, res: Response): Promise<void> => {
   try {
     const { bookTitle, bookAuthor } = req.body;
-    
+
     if (!bookTitle || !bookAuthor) {
       res.status(400).json({ error: 'Book title and author are required' });
       return;
     }
-    
+
     const result = await agentOrchestrator.runAgent(
-      AgentType.BOOK_SUMMARY, 
+      AgentType.BOOK_SUMMARY,
       { bookTitle, bookAuthor }
     );
-    
+
     res.status(202).json({
       taskId: result.taskId,
       message: `Summary of book "${bookTitle}" by ${bookAuthor} is being processed`,
@@ -80,14 +87,14 @@ export const runBookSummaryAgent = async (req: Request, res: Response): Promise<
 export const getTaskStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { taskId } = req.params;
-    
+
     const task = await taskRepository.getTaskById(taskId);
-    
+
     if (!task) {
       res.status(404).json({ error: 'Task not found' });
       return;
     }
-    
+
     res.json(task);
   } catch (error) {
     console.error(`Error retrieving status of task ${req.params.taskId}:`, error);
@@ -114,12 +121,12 @@ export const getPendingTasks = async (req: Request, res: Response): Promise<void
 export const queryKnowledgeBase = async (req: Request, res: Response): Promise<void> => {
   try {
     const { query } = req.body;
-    
+
     if (!query) {
       res.status(400).json({ error: 'Query is required' });
       return;
     }
-    
+
     // Note: The RAG agent is not yet implemented
     res.status(501).json({
       message: 'RAG agent not yet implemented',
@@ -128,5 +135,33 @@ export const queryKnowledgeBase = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error('Error querying the knowledge base:', error);
     res.status(500).json({ error: 'Error querying the knowledge base' });
+  }
+};
+
+/**
+ * Extract content from a web page
+ */
+export const extractWebContent = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      res.status(400).json({ error: 'URL is required' });
+      return;
+    }
+
+    const result = await agentOrchestrator.runAgent(
+      AgentType.WEB_EXTRACTOR,
+      { url }
+    );
+
+    res.status(202).json({
+      taskId: result.taskId,
+      message: `Content extraction from "${url}" is being processed`,
+      status: 'processing'
+    });
+  } catch (error) {
+    console.error('Error extracting web content:', error);
+    res.status(500).json({ error: 'Error extracting web content' });
   }
 }; 
