@@ -1,6 +1,6 @@
 import { Agent } from "./Agent";
 import { BookSummaryAgent } from "./BookSummaryAgent";
-import { WebExtractorAgent } from "./WebExtractorAgent";
+import { WebSummarizerAgent } from "./WebSummarizerAgent";
 import { TaskStatus } from "../types/common";
 import { TaskRepository } from "../storage/TaskRepository";
 
@@ -30,7 +30,7 @@ export class AgentOrchestrator {
 
     // Initialize agents
     this.registerAgent(AgentType.BOOK_SUMMARY, new BookSummaryAgent());
-    this.registerAgent(AgentType.WEB_EXTRACTOR, new WebExtractorAgent());
+    this.registerAgent(AgentType.WEB_EXTRACTOR, new WebSummarizerAgent());
 
     // To implement: add other agents
     // this.registerAgent(AgentType.RAG_QUERY, new RAGQueryAgent());

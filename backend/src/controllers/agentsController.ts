@@ -143,21 +143,21 @@ export const queryKnowledgeBase = async (req: Request, res: Response): Promise<v
  */
 export const extractWebContent = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { url } = req.body;
+    const { title, content } = req.body;
 
-    if (!url) {
-      res.status(400).json({ error: 'URL is required' });
+    if (!title || !content) {
+      res.status(400).json({ error: 'Title and content are required' });
       return;
     }
 
     const result = await agentOrchestrator.runAgent(
       AgentType.WEB_EXTRACTOR,
-      { url }
+      { title, content }
     );
 
     res.status(202).json({
       taskId: result.taskId,
-      message: `Content extraction from "${url}" is being processed`,
+      message: `Content extraction from "${title}" is being processed`,
       status: 'processing'
     });
   } catch (error) {
