@@ -63,7 +63,8 @@ export interface BookSummaryResult {
 
 // Input pour l'extraction web
 export interface WebExtractInput {
-  url: string;
+  content: string;
+  title: string;
 }
 
 // Type pour le résultat de l'extraction web
@@ -84,4 +85,11 @@ export interface WebExtractResult {
     lastModified?: string;
     [key: string]: string | undefined;
   };
+}
+
+export interface WebExtractOutput {
+  title: string;
+  content: string;
+  summary: string;
+  metadata: Record<string, string>;
 } 
