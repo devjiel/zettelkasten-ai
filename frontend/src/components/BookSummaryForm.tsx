@@ -1,130 +1,95 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  TextField,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, Alert, Divider } from '@mui/material';
 import { BookSummaryInput } from '../types';
+import { useAgents } from '../contexts/AgentsContext';
 
 interface BookSummaryFormProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (input: BookSummaryInput) => Promise<void>;
-  isSubmitting: boolean;
+  onSubmit: (taskId: string) => void;
 }
 
-const BookSummaryForm: React.FC<BookSummaryFormProps> = ({
-  open,
-  onClose,
-  onSubmit,
-  isSubmitting,
-}) => {
+export const BookSummaryForm: React.FC<BookSummaryFormProps> = ({ onSubmit }) => {
   const [bookTitle, setBookTitle] = useState('');
   const [bookAuthor, setBookAuthor] = useState('');
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { runBookSummary } = useAgents();
 
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (!bookTitle.trim()) {
-      newErrors.bookTitle = 'Le titre du livre est requis';
+    if (!bookTitle || !bookAuthor) {
+      setError('Veuillez remplir tous les champs');
+      return;
     }
 
-    if (!bookAuthor.trim()) {
-      newErrors.bookAuthor = 'L\'auteur du livre est requis';
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      const input: BookSummaryInput = {
+        bookTitle,
+        bookAuthor
+      };
+
+      const result = await runBookSummary(input);
+      onSubmit(result.taskId);
+      setBookTitle('');
+      setBookAuthor('');
+    } catch (err) {
+      console.error('Erreur lors de la soumission:', err);
+      setError('Erreur lors de la soumission. Veuillez réessayer.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (validateForm()) {
-      try {
-        await onSubmit({
-          bookTitle: bookTitle,
-          bookAuthor: bookAuthor
-        });
-        handleReset();
-      } catch (error) {
-        console.error('Erreur lors de la soumission:', error);
-      }
-    }
-  };
-
-  const handleReset = () => {
-    setBookTitle('');
-    setBookAuthor('');
-    setErrors({});
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-    >
-      <DialogTitle>Créer un résumé de livre</DialogTitle>
+    <Paper sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h5" gutterBottom>
+        Agent de résumé de livre
+      </Typography>
+      <Divider sx={{ mb: 2 }} />
 
-      <DialogContent>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          L'agent IA va analyser et créer un résumé complet du livre, ainsi que des flashcards pour aider à mémoriser les concepts clés.
-        </Alert>
+      <Typography variant="body1" paragraph>
+        Cet agent vous aide à créer des notes et des flashcards à partir d'un résumé de livre.
+        Fournissez le titre et l'auteur pour générer des fiches de notes.
+      </Typography>
 
-        <Box component="form" noValidate sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="bookTitle"
-            label="Titre du livre"
-            name="bookTitle"
-            autoFocus
-            value={bookTitle}
-            onChange={(e) => setBookTitle(e.target.value)}
-            error={!!errors.bookTitle}
-            helperText={errors.bookTitle}
-            disabled={isSubmitting}
-          />
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        <TextField
+          fullWidth
+          label="Titre du livre"
+          value={bookTitle}
+          onChange={(e) => setBookTitle(e.target.value)}
+          margin="normal"
+          required
+        />
 
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="bookAuthor"
-            name="bookAuthor"
-            label="Auteur du livre"
-            value={bookAuthor}
-            onChange={(e) => setBookAuthor(e.target.value)}
-            error={!!errors.bookAuthor}
-            helperText={errors.bookAuthor}
-            disabled={isSubmitting}
-          />
-        </Box>
-      </DialogContent>
+        <TextField
+          fullWidth
+          label="Auteur"
+          value={bookAuthor}
+          onChange={(e) => setBookAuthor(e.target.value)}
+          margin="normal"
+          required
+        />
 
-      <DialogActions>
-        <Button onClick={onClose} disabled={isSubmitting}>
-          Annuler
-        </Button>
         <Button
-          onClick={handleSubmit}
+          type="submit"
           variant="contained"
+          color="primary"
           disabled={isSubmitting}
-          startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+          sx={{ mt: 2 }}
         >
-          {isSubmitting ? 'Traitement en cours...' : 'Créer le résumé'}
+          {isSubmitting ? 'Traitement en cours...' : 'Générer des notes'}
         </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
+      </Box>
 
-export default BookSummaryForm; 
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+    </Paper>
+  );
+}; 

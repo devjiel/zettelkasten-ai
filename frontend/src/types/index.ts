@@ -59,4 +59,29 @@ export interface BookSummaryResult {
     question: string;
     answer: string;
   }[];
+}
+
+// Input pour l'extraction web
+export interface WebExtractInput {
+  url: string;
+}
+
+// Type pour le résultat de l'extraction web
+export interface WebExtractResult {
+  title: string;
+  url: string;
+  content: string;
+  summary: string;
+  tags: string[];
+  keyPoints: string[];
+  flashcards: {
+    question: string;
+    answer: string;
+  }[];
+  metadata: {
+    author?: string;
+    publishedDate?: string;
+    lastModified?: string;
+    [key: string]: string | undefined;
+  };
 } 
