@@ -27,12 +27,12 @@ import { TaskRepository } from './storage/TaskRepository';
 import { InMemoryStorage } from './storage/InMemoryStorage';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 let server: http.Server;
 
 // Middlewares
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001', // URL de votre frontend
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // URL de votre frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

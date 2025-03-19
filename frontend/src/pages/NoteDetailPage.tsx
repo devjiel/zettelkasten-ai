@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Paper,
-  Grid,
   Chip,
   Divider,
   CircularProgress,
@@ -17,6 +16,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
 import FlashcardView from '../components/FlashcardView';
 import NoteForm from '../components/NoteForm';
 import { noteService } from '../services/noteService';
@@ -24,6 +24,7 @@ import { flashcardService } from '../services/flashcardService';
 import { Note, Flashcard } from '../types';
 import { formatDate } from '../utils/formatters';
 import { useAppContext } from '../contexts/AppContext';
+import { exportNote } from '../services/api';
 
 const NoteDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -104,7 +105,7 @@ const NoteDetailPage: React.FC = () => {
   const handleReviewFlashcard = async (flashcardId: string, remembered: boolean) => {
     try {
       await flashcardService.updateFlashcardAfterReview(flashcardId, remembered);
-      
+
       // Rafraîchir la liste des flashcards
       if (id) {
         const updatedFlashcards = await flashcardService.getFlashcardsByNoteId(id);
@@ -112,6 +113,23 @@ const NoteDetailPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Erreur lors de la mise à jour de la flashcard:', err);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!id || !note) return;
+    try {
+      const blob = await exportNote(id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError('Erreur lors de l\'export de la note');
     }
   };
 
@@ -156,6 +174,11 @@ const NoteDetailPage: React.FC = () => {
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
             {note.title}
           </Typography>
+          <Tooltip title="Exporter">
+            <IconButton onClick={handleExport} color="primary">
+              <DownloadIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Modifier">
             <IconButton onClick={handleEdit} color="primary">
               <EditIcon />
@@ -174,11 +197,11 @@ const NoteDetailPage: React.FC = () => {
               <Chip key={tag} label={tag} size="small" />
             ))}
           </Box>
-          
+
           <Typography variant="body1" component="div" sx={{ whiteSpace: 'pre-wrap' }}>
             {note.content}
           </Typography>
-          
+
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Typography variant="caption" color="text.secondary">
               {note.updatedAt
@@ -199,16 +222,16 @@ const NoteDetailPage: React.FC = () => {
               Aucune flashcard associée à cette note.
             </Alert>
           ) : (
-            <Grid container spacing={3}>
+            <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={3}>
               {flashcards.map((flashcard) => (
-                <Grid item xs={12} sm={6} md={4} key={flashcard.id}>
+                <Box key={flashcard.id}>
                   <FlashcardView
                     flashcard={flashcard}
                     onReview={handleReviewFlashcard}
                   />
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           )}
         </Box>
       </Box>
