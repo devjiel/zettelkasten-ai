@@ -2,7 +2,8 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { Agent } from "./Agent";
 import { BookSummaryResult, TaskStatus } from "../types/common";
-import { NoteRepository, Note } from "../storage/NoteRepository";
+import { NoteRepository } from "../storage/NoteRepository";
+import { Note } from "../types/note";
 import { FlashcardRepository, Flashcard } from "../storage/FlashcardRepository";
 
 // Validation schema for inputs
@@ -88,6 +89,7 @@ export class BookSummaryAgent extends Agent {
 
       // Create a note for the summary
       const note: Note = {
+        id: uuidv4(),
         title: `Summary: ${input.bookTitle} - ${input.bookAuthor}`,
         content: `
 # Book Summary: "${input.bookTitle}" by ${input.bookAuthor}
