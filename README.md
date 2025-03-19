@@ -1,43 +1,45 @@
 # Zettelkasten AI
 
-Application de prise de notes basée sur la méthode Zettelkasten et pilotée par l'intelligence artificielle.
+An AI-powered note-taking application based on the Zettelkasten method.
 
-## Fonctionnalités
+## Features
 
-- **Résumé automatique de livres** : Demandez à l'IA de générer un résumé détaillé et des flashcards pour n'importe quel livre
-- **Prise de notes Zettelkasten** : Organisez vos idées selon la méthode Zettelkasten avec des liens entre les notes
-- **Flashcards intégrées** : Créez et révisez des flashcards directement liées à vos notes
-- **Recherche intelligente (RAG)** : Posez des questions sur votre base de connaissances et obtenez des réponses contextuelles
+- **Automatic Book Summarization**: Ask AI to generate detailed summaries and flashcards for any book
+- **Web Content Extraction**: Import and summarize web articles directly into your knowledge base
+- **Zettelkasten Note-Taking**: Organize your ideas using the Zettelkasten method with interconnected notes
+- **Integrated Flashcards**: Create and review flashcards directly linked to your notes
+- **Smart Search (RAG)**: Ask questions about your knowledge base and get contextual answers
 
 ## Architecture
 
-L'application est constituée de deux composants principaux :
+The application consists of two main components:
 
-- **Backend** : API Node.js/TypeScript utilisant LangChain pour orchestrer les agents IA
-- **Frontend** : Interface utilisateur React pour interagir avec les notes et les agents IA
+- **Backend**: Node.js/TypeScript API using LangChain to orchestrate AI agents
+- **Frontend**: React user interface for interacting with notes and AI agents
 
-### Agents IA
+### AI Agents
 
-L'application utilise une architecture multi-agents où chaque agent est spécialisé dans une tâche spécifique :
+The application uses a multi-agent architecture where each agent specializes in a specific task:
 
-- **Agent de résumé de livre** : Génère des résumés et des flashcards à partir de titres de livres
-- **Agent RAG** : Répond aux questions basées sur les notes stockées
-- **Orchestrateur** : Coordonne les agents et gère les tâches asynchrones
+- **Book Summary Agent**: Generates summaries and flashcards from book titles
+- **Web Summarizer Agent**: Extracts and summarizes content from web articles
+- **RAG Agent**: Answers questions based on stored notes
+- **Orchestrator**: Coordinates agents and manages asynchronous tasks
 
 ## Installation
 
-### Prérequis
+### Prerequisites
 
 - Node.js 18+
 - MongoDB
-- Clé API OpenAI
+- Anthropic API Key
 
 ### Backend
 
 ```bash
 cd backend
 npm install
-cp .env.example .env  # Puis modifiez les variables d'environnement
+cp .env.example .env  # Then modify environment variables
 npm run dev
 ```
 
@@ -49,15 +51,11 @@ npm install
 npm run dev
 ```
 
-## Utilisation
+## Usage
 
-### Résumé de livre
+### Book Summary
 
-Vous pouvez demander à l'application de générer un résumé de livre en utilisant un format comme celui-ci :
-
-> Je n'ai pas lu Edward Bernays, Propaganda, Zones, 2007. Je voudrais que tu me réalise un résumé ainsi que des flash card des éléments les plus importants du livre. Avec le contenu que tu auras produits je veux avoir une connaissance et compréhension du livre comme si je l'avais moi même lu.
-
-L'application traitera cette demande en envoyant une requête à l'API avec un contenu JSON simple :
+You can request the application to generate a book summary using a format like this:
 
 ```json
 {
@@ -66,19 +64,37 @@ L'application traitera cette demande en envoyant une requête à l'API avec un c
 }
 ```
 
-L'application générera alors un résumé complet, des points clés et des flashcards.
+The application will generate a comprehensive summary, key points, and flashcards.
 
-### Interrogation de la base de connaissances
+### Web Content Extraction
 
-Une fois que vous avez accumulé des notes et des résumés, vous pouvez interroger votre base de connaissances en posant des questions en langage naturel. L'application utilisera la technologie RAG (Retrieval Augmented Generation) pour trouver les informations pertinentes et formuler une réponse.
+Extract and summarize web content by providing the URL and optional title:
 
-## Développement futur
+```json
+{
+  "url": "https://example.com/article",
+  "title": "Optional Custom Title"
+}
+```
 
-- Intégration avec des sources externes (articles, PDF, etc.)
-- Export des notes et flashcards
-- Application mobile
-- Personnalisation des agents IA
+The Web Summarizer Agent will:
+- Extract the main content
+- Generate a concise summary
+- Suggest relevant tags
+- Save the content as a note in your knowledge base
 
-## Licence
+### Knowledge Base Querying
+
+Once you have accumulated notes and summaries, you can query your knowledge base using natural language questions. The application uses RAG (Retrieval Augmented Generation) technology to find relevant information and formulate answers.
+
+## Future Development
+
+- Integration with additional external sources (PDFs, academic papers, etc.)
+- Note and flashcard export
+- Mobile application
+- AI agent customization
+- Advanced tagging and categorization system
+
+## License
 
 MIT 
