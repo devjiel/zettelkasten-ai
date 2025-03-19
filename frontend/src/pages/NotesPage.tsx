@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Container,
   Typography,
-  Grid,
   Box,
   Button,
   TextField,
@@ -17,6 +16,7 @@ import NoteCard from '../components/NoteCard';
 import NoteForm from '../components/NoteForm';
 import { useAppContext } from '../contexts/AppContext';
 import { noteService } from '../services/noteService';
+import { exportNote } from '../services/api';
 import { Note } from '../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -67,7 +67,7 @@ const NotesPage: React.FC = () => {
     } catch (err) {
       console.error('Erreur lors de la sauvegarde de la note:', err);
       setSnackbar({
-        open: true, 
+        open: true,
         message: 'Erreur lors de la sauvegarde de la note. Veuillez réessayer.',
         severity: 'error'
       });
@@ -82,12 +82,35 @@ const NotesPage: React.FC = () => {
     } catch (err) {
       console.error('Erreur lors de la suppression de la note:', err);
       setSnackbar({
-        open: true, 
+        open: true,
         message: 'Erreur lors de la suppression de la note. Veuillez réessayer.',
         severity: 'error'
       });
     }
   };
+
+  const handleExport = async (note: Note) => {
+    if (!note || !note.id) return;
+    try {
+      const blob = await exportNote(note.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error exporting note:', err);
+      setSnackbar({
+        open: true,
+        message: 'Error exporting note. Please try again.',
+        severity: 'error'
+      });
+    }
+  };
+
 
   const handleNoteClick = (note: Note) => {
     if (note.id) {
@@ -149,18 +172,19 @@ const NotesPage: React.FC = () => {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }} gap={3}>
           {filteredNotes.map((note) => (
-            <Grid item xs={12} sm={6} md={4} key={note.id}>
+            <Box key={note.id}>
               <NoteCard
                 note={note}
                 onEdit={() => handleOpenForm(note)}
                 onDelete={handleDeleteNote}
+                onExport={() => handleExport(note)}
                 onClick={handleNoteClick}
               />
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
 
       <NoteForm

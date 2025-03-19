@@ -96,17 +96,17 @@ const NoteForm: React.FC<NoteFormProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      fullWidth 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
       maxWidth="md"
       scroll="paper"
     >
       <DialogTitle>
         {existingNote ? 'Modifier la note' : 'Ajouter une nouvelle note'}
       </DialogTitle>
-      
+
       <DialogContent dividers>
         <Box component="form" noValidate sx={{ mt: 1 }}>
           <TextField
@@ -122,7 +122,7 @@ const NoteForm: React.FC<NoteFormProps> = ({
             error={!!errors.title}
             helperText={errors.title}
           />
-          
+
           <TextField
             margin="normal"
             required
@@ -137,12 +137,12 @@ const NoteForm: React.FC<NoteFormProps> = ({
             error={!!errors.content}
             helperText={errors.content}
           />
-          
+
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
               Tags
             </Typography>
-            
+
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <Autocomplete
                 freeSolo
@@ -151,40 +151,42 @@ const NoteForm: React.FC<NoteFormProps> = ({
                 onInputChange={(_, value) => setNewTag(value)}
                 fullWidth
                 renderInput={(params) => (
-                  <TextField 
-                    {...params} 
-                    variant="outlined" 
-                    placeholder="Ajouter un tag" 
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    placeholder="Ajouter un tag"
                     size="small"
                     onKeyDown={handleKeyDown}
                   />
                 )}
               />
-              <Button 
-                variant="contained" 
-                onClick={handleAddTag} 
+              <Button
+                variant="contained"
+                onClick={handleAddTag}
                 disabled={!newTag}
                 sx={{ ml: 1 }}
               >
                 Ajouter
               </Button>
             </Box>
-            
-            <Paper variant="outlined" sx={{ p: 1, minHeight: '50px' }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    onDelete={() => handleRemoveTag(tag)}
-                  />
-                ))}
-              </Box>
-            </Paper>
+
+            {tags.length > 0 && (
+              <Paper variant="outlined" sx={{ p: 1, minHeight: '50px' }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      onDelete={() => handleRemoveTag(tag)}
+                    />
+                  ))}
+                </Box>
+              </Paper>
+            )}
           </Box>
         </Box>
       </DialogContent>
-      
+
       <DialogActions>
         <Button onClick={onClose}>Annuler</Button>
         <Button onClick={handleSave} variant="contained">

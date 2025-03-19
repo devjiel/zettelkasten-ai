@@ -11,25 +11,22 @@ import {
   Button,
   Snackbar,
   Alert,
-  List,
-  ListItem,
-  ListItemText,
 } from '@mui/material';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
-import { useTheme } from '@mui/material/styles';
 import ThemeContext from '../contexts/ThemeContext';
+import { exportAllNotes } from '../services/api';
 
 const SettingsPage: React.FC = () => {
-  const theme = useTheme();
   const { darkMode, toggleDarkMode } = useContext(ThemeContext);
   const [apiUrl, setApiUrl] = useState(() => {
-    return localStorage.getItem('apiUrl') || 'http://localhost:3000/api';
+    return localStorage.getItem('apiUrl') || 'http://localhost:3001/api';
   });
-  const [snackbar, setSnackbar] = useState({ 
-    open: false, 
-    message: '', 
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning' 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
+  const [error, setError] = useState<string | null>(null);
+  const [exportSuccess, setExportSuccess] = useState(false);
 
   const handleDarkModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     toggleDarkMode();
@@ -40,7 +37,6 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleSaveApiUrl = () => {
-    // Sauvegarde de l'URL de l'API à implémenter plus tard
     localStorage.setItem('apiUrl', apiUrl);
     setSnackbar({
       open: true,
@@ -53,9 +49,9 @@ const SettingsPage: React.FC = () => {
     const confirmed = window.confirm(
       'Êtes-vous sûr de vouloir réinitialiser toutes les données ? Cette action est irréversible.'
     );
-    
+
     if (confirmed) {
-      // À implémenter : réinitialisation des données
+      // TODO: Implement data reset
       setSnackbar({
         open: true,
         message: 'Toutes les données ont été réinitialisées',
@@ -68,19 +64,38 @@ const SettingsPage: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const handleExportAllNotes = async () => {
+    try {
+      setError(null);
+      setExportSuccess(false);
+      const blob = await exportAllNotes();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'zettelkasten_notes.zip';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setExportSuccess(true);
+    } catch (err) {
+      setError('Erreur lors de l\'export des notes');
+    }
+  };
+
   return (
     <Container maxWidth="md">
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Paramètres
         </Typography>
-        
+
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             Apparence
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          
+
           <Box sx={{ mb: 2 }}>
             <FormControlLabel
               control={
@@ -94,18 +109,18 @@ const SettingsPage: React.FC = () => {
               label="Mode sombre"
             />
           </Box>
-          
+
           <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
             Changez entre le mode clair et le mode sombre.
           </Typography>
         </Paper>
-        
+
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             Configuration de l'API
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          
+
           <Box sx={{ mb: 2 }}>
             <TextField
               fullWidth
@@ -124,74 +139,63 @@ const SettingsPage: React.FC = () => {
             </Button>
           </Box>
         </Paper>
-        
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Synchronisation
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          
-          <List>
-            <ListItem
-              secondaryAction={
-                <Switch
-                  edge="end"
-                  onChange={() => {}}
-                  checked={true}
-                />
-              }
-            >
-              <ListItemText
-                primary="Synchronisation automatique"
-                secondary="Synchronise automatiquement vos données avec le serveur"
-              />
-            </ListItem>
-            
-            <ListItem
-              secondaryAction={
-                <Button
-                  variant="outlined"
-                  startIcon={<CloudSyncIcon />}
-                  onClick={() => {
-                    setSnackbar({
-                      open: true,
-                      message: 'Synchronisation terminée',
-                      severity: 'success',
-                    });
-                  }}
-                >
-                  Synchroniser
-                </Button>
-              }
-            >
-              <ListItemText
-                primary="Synchroniser maintenant"
-                secondary="Force une synchronisation immédiate avec le serveur"
-              />
-            </ListItem>
-          </List>
-        </Paper>
-        
+
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Données
+            Gestion des données
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={handleResetData}
-          >
-            Réinitialiser toutes les données
-          </Button>
-          
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-            Attention : Cette action supprimera toutes vos notes, flashcards et autres données. Cette action est irréversible.
-          </Typography>
+
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              Exportez toutes vos notes au format Markdown dans une archive ZIP.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleExportAllNotes}
+              sx={{ mt: 1 }}
+            >
+              Exporter toutes les notes
+            </Button>
+          </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {exportSuccess && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Export réussi !
+            </Alert>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+
+          <Box>
+            <Typography variant="h6" color="error" gutterBottom>
+              Zone de danger
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Ces actions sont irréversibles.
+            </Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                if (window.confirm('Êtes-vous sûr de vouloir supprimer toutes vos données ?')) {
+                  // TODO: Implement data deletion
+                }
+              }}
+            >
+              Supprimer toutes les données
+            </Button>
+          </Box>
         </Paper>
       </Box>
-      
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
