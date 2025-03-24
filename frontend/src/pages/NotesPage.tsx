@@ -9,22 +9,26 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  Stack,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
+import UploadIcon from '@mui/icons-material/Upload';
 import NoteCard from '../components/NoteCard';
 import NoteForm from '../components/NoteForm';
+import ImportDialog from '../components/ImportDialog';
 import { useAppContext } from '../contexts/AppContext';
 import { noteService } from '../services/noteService';
-import { exportNote } from '../services/api';
+import { exportNote, importNotes } from '../services/api';
 import { Note } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 const NotesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { notes, loading, error, refreshNotes } = useAppContext();
+  const { notes, loading, error: contextError, refreshNotes } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | undefined>(undefined);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
@@ -111,6 +115,24 @@ const NotesPage: React.FC = () => {
     }
   };
 
+  const handleImport = async (files: File[], options: { overwrite: boolean; skipDuplicates: boolean }) => {
+    try {
+      const result = await importNotes(files, options);
+      refreshNotes();
+      setSnackbar({
+        open: true,
+        message: `Import réussi : ${result.summary.success} note(s) importée(s)`,
+        severity: 'success'
+      });
+    } catch (err) {
+      console.error('Erreur lors de l\'import:', err);
+      setSnackbar({
+        open: true,
+        message: 'Erreur lors de l\'import des notes. Veuillez réessayer.',
+        severity: 'error'
+      });
+    }
+  };
 
   const handleNoteClick = (note: Note) => {
     if (note.id) {
@@ -129,13 +151,22 @@ const NotesPage: React.FC = () => {
           <Typography variant="h4" component="h1" gutterBottom>
             Mes notes
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenForm()}
-          >
-            Nouvelle note
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              onClick={() => setImportOpen(true)}
+            >
+              Importer
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenForm()}
+            >
+              Nouvelle note
+            </Button>
+          </Stack>
         </Box>
 
         <TextField
@@ -159,9 +190,9 @@ const NotesPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
         </Box>
-      ) : error ? (
+      ) : contextError ? (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+          {contextError}
         </Alert>
       ) : filteredNotes.length === 0 ? (
         <Box sx={{ textAlign: 'center', my: 4 }}>
@@ -193,6 +224,12 @@ const NotesPage: React.FC = () => {
         onSave={handleSaveNote}
         existingNote={selectedNote}
         existingTags={allTags}
+      />
+
+      <ImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImport={handleImport}
       />
 
       <Snackbar
