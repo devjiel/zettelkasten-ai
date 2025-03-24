@@ -7,7 +7,7 @@
       "name": "Debug Backend",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/backend/src/index.ts",
-      "runtimeArgs": ["-r", "ts-node/register"],
+      "runtimeExecutable": "${workspaceFolder}/backend/node_modules/.bin/ts-node",
       "sourceMaps": true,
       "resolveSourceMapLocations": [
         "${workspaceFolder}/**",
@@ -18,7 +18,8 @@
         "NODE_ENV": "development"
       },
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
+      "internalConsoleOptions": "neverOpen",
+      "cwd": "${workspaceFolder}/backend"
     },
     {
       "type": "node",

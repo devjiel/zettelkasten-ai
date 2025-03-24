@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { MarkdownExportService } from '../services/MarkdownExportService';
+import { MarkdownService } from '../services/MarkdownService';
 import { NoteRepository } from '../storage/NoteRepository';
+import { FlashcardRepository } from '../storage/FlashcardRepository';
 import archiver from 'archiver';
 
-const exportService = MarkdownExportService.getInstance();
+const markdownService = MarkdownService.getInstance();
 const noteRepo = NoteRepository.getInstance();
+const flashcardRepo = FlashcardRepository.getInstance();
 
 // Validation schema for bulk export request
 const BulkExportSchema = z.object({
@@ -17,24 +19,29 @@ export const exportController = {
      * Export a single note as Markdown
      * GET /api/notes/:id/export
      */
-    async exportSingleNote(req: Request, res: Response) {
+    async exportNote(req: Request, res: Response) {
         try {
-            const noteId = req.params.id;
-            const note = await noteRepo.getNoteById(noteId);
+            const { id } = req.params;
+            const note = await noteRepo.getNoteById(id);
 
             if (!note) {
-                return res.status(404).json({ error: 'Note introuvable' });
+                return res.status(404).json({
+                    message: 'Note introuvable'
+                });
             }
 
-            const markdown = await exportService.exportNote(note);
-            const filename = note.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.md';
+            const flashcards = await flashcardRepo.getFlashcardsByNoteId(id);
+            const { markdown, filename } = markdownService.toMarkdown(note, flashcards);
 
             res.setHeader('Content-Type', 'text/markdown');
             res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-            return res.send(markdown);
+            res.send(markdown);
         } catch (error) {
             console.error('Erreur lors de l\'export de la note:', error);
-            return res.status(500).json({ error: 'Échec de l\'export de la note' });
+            res.status(500).json({
+                message: 'Erreur lors de l\'export de la note',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
         }
     },
 
@@ -52,14 +59,23 @@ export const exportController = {
             );
 
             // Filter out any null values (notes not found)
-            const validNotes = notes.filter(note => note !== null);
+            const validNotes = notes.filter((note): note is NonNullable<typeof note> => note !== null);
 
             if (validNotes.length === 0) {
                 return res.status(404).json({ error: 'Aucune note valide trouvée' });
             }
 
+            // Get flashcards for all notes
+            const flashcardsMap = new Map();
+            await Promise.all(
+                validNotes.map(async note => {
+                    const flashcards = await flashcardRepo.getFlashcardsByNoteId(note.id);
+                    flashcardsMap.set(note.id, flashcards);
+                })
+            );
+
             // Export all notes
-            const exports = await exportService.exportNotes(validNotes);
+            const exports = markdownService.exportNotes(validNotes, flashcardsMap);
 
             // Create zip archive
             const archive = archiver('zip', {
@@ -89,44 +105,36 @@ export const exportController = {
         }
     },
 
-    /**
-     * Export all notes as a zip file
-     * GET /api/notes/export-all
-     */
     async exportAllNotes(req: Request, res: Response) {
         try {
-            // Get all notes
             const notes = await noteRepo.getAllNotes();
 
             if (notes.length === 0) {
-                return res.status(404).json({ error: 'Aucune note trouvée' });
+                return res.status(404).json({
+                    message: 'Aucune note trouvée'
+                });
             }
 
-            // Export all notes
-            const exports = await exportService.exportNotes(notes);
+            // Get flashcards for all notes
+            const flashcardsMap = new Map();
+            await Promise.all(
+                notes.map(async note => {
+                    const flashcards = await flashcardRepo.getFlashcardsByNoteId(note.id);
+                    flashcardsMap.set(note.id, flashcards);
+                })
+            );
 
-            // Create zip archive
-            const archive = archiver('zip', {
-                zlib: { level: 9 } // Maximum compression
-            });
+            const markdown = markdownService.toMarkdownCollection(notes, flashcardsMap);
 
-            // Set response headers
-            res.setHeader('Content-Type', 'application/zip');
-            res.setHeader('Content-Disposition', 'attachment; filename="all-notes-export.zip"');
-
-            // Pipe archive to response
-            archive.pipe(res);
-
-            // Add each note to the archive
-            for (const [filename, content] of exports) {
-                archive.append(content, { name: filename });
-            }
-
-            // Finalize archive
-            await archive.finalize();
+            res.setHeader('Content-Type', 'text/markdown');
+            res.setHeader('Content-Disposition', 'attachment; filename="all_notes.md"');
+            res.send(markdown);
         } catch (error) {
             console.error('Erreur lors de l\'export des notes:', error);
-            return res.status(500).json({ error: 'Échec de l\'export des notes' });
+            res.status(500).json({
+                message: 'Erreur lors de l\'export des notes',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
         }
     }
 }; 
